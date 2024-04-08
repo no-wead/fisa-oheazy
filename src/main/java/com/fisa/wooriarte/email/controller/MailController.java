@@ -1,7 +1,7 @@
 package com.fisa.wooriarte.email.controller;
 
-import com.fisa.wooriarte.email.dto.EmailCheckDTO;
-import com.fisa.wooriarte.email.dto.EmailRequestDTO;
+import com.fisa.wooriarte.email.DTO.EmailCheckDTO;
+import com.fisa.wooriarte.email.DTO.EmailRequestDTO;
 import com.fisa.wooriarte.email.service.MailSendService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
