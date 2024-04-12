@@ -3,10 +3,13 @@ package com.fisa.wooriarte.projectmanager.service;
 import com.fisa.wooriarte.projectmanager.DTO.ProjectManagerDTO;
 import com.fisa.wooriarte.projectmanager.domain.ProjectManager;
 import com.fisa.wooriarte.projectmanager.repository.ProjectManagerRepository;
+import com.fisa.wooriarte.util.Encryption;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+
+import java.security.NoSuchAlgorithmException;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -14,10 +17,12 @@ import java.util.Optional;
 public class ProjectManagerService {
 
     private final ProjectManagerRepository projectManagerRepository;
+    private final Encryption encryption;
 
     @Autowired
-    public ProjectManagerService(ProjectManagerRepository projectManagerRepository) {
+    public ProjectManagerService(ProjectManagerRepository projectManagerRepository, Encryption encryption) {
         this.projectManagerRepository = projectManagerRepository;
+        this.encryption = encryption;
     }
     /*
    프로젝트 매니저 추가
@@ -26,11 +31,13 @@ public class ProjectManagerService {
    2. DB에 저장
     */
     public boolean addProjectManager(ProjectManagerDTO projectManagerDTO) {
-        Optional<ProjectManager> optionalSpaceRental = projectManagerRepository.findByProjectManagerId(projectManagerDTO.getId());
-        if (optionalSpaceRental.isPresent()) {
+        Optional<ProjectManager> optionalProjectManager = projectManagerRepository.findByProjectManagerId(projectManagerDTO.getId());
+        if (optionalProjectManager.isPresent()) {
             throw new DataIntegrityViolationException("Duplicate User id");
         }
-        projectManagerRepository.save(projectManagerDTO.toEntity());
+        ProjectManager projectManager = projectManagerDTO.toEntity();
+        projectManager.setPwd(encryption.encryptionSHA256(projectManager.getPwd()));
+        projectManagerRepository.save(projectManager);
         return true;
     }
 
@@ -42,7 +49,7 @@ public class ProjectManagerService {
      */
     public boolean loginProjectManager(String id, String pwd) {
         Optional<ProjectManager> optionalProjectManager = projectManagerRepository.findByProjectManagerId(id);
-        return optionalProjectManager.isPresent() && optionalProjectManager.get().getPwd().equals(pwd);
+        return optionalProjectManager.isPresent() && optionalProjectManager.get().getPwd().equals(encryption.encryptionSHA256(pwd));
     }
 
     //프로젝트 매니저 아이디 찾기
@@ -57,7 +64,7 @@ public class ProjectManagerService {
         ProjectManager projectManager = projectManagerRepository.findByProjectManagerId(id)
                 .orElseThrow(() -> new NoSuchElementException("가입되지 않은 사용자입니다"));
         //비밀번호 검증
-        projectManager.setPwd(newPwd);
+        projectManager.setPwd(encryption.encryptionSHA256(newPwd));
         return true;
     }
 
