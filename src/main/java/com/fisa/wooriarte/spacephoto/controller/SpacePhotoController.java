@@ -24,14 +24,6 @@ public class SpacePhotoController {
      * @param files
      * @return
      */
-//    @PostMapping(path = "/image", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
-//    public ResponseEntity createImage(
-////            @RequestPart(value = "id") Long imageId,
-//            @RequestPart(value = "file", required = false) MultipartFile file
-//    ){
-//        s3Service.createImage(file);
-//        return new ResponseEntity(null, HttpStatus.OK);
-//    }
     @PostMapping(path = "/image", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity createPhoto(
             @RequestPart(value = "files") List<MultipartFile> files
