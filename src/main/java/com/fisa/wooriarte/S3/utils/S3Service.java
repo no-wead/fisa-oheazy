@@ -1,9 +1,11 @@
-package com.fisa.wooriarte.spacephoto.utils;
+package com.fisa.wooriarte.S3.utils;
 
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,9 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URL;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.Optional;
 
 @Component
 @Slf4j

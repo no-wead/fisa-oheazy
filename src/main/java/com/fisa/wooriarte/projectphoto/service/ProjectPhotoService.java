@@ -1,9 +1,9 @@
-package com.fisa.wooriarte.spacephoto.service;
+package com.fisa.wooriarte.projectphoto.service;
 
-import com.fisa.wooriarte.spacephoto.domain.SpacePhoto;
-import com.fisa.wooriarte.spacephoto.dto.SpacePhotoDTO;
-import com.fisa.wooriarte.spacephoto.repository.SpacePhotoRepository;
 import com.fisa.wooriarte.S3.utils.S3Service;
+import com.fisa.wooriarte.projectphoto.domain.ProjectPhoto;
+import com.fisa.wooriarte.projectphoto.dto.ProjectPhotoDTO;
+import com.fisa.wooriarte.projectphoto.repository.ProjectPhotoRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,23 +16,23 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class SpacePhotoService {
+public class ProjectPhotoService {
     private final S3Service s3Service;
-    private final SpacePhotoRepository spacePhotoRepository;
+    private final ProjectPhotoRepository projectPhotoRepository;
 
-    public SpacePhotoService(S3Service s3Service, SpacePhotoRepository spacePhotoRepository) {
+    public ProjectPhotoService(S3Service s3Service, ProjectPhotoRepository projectPhotoRepository) {
         this.s3Service = s3Service;
-        this.spacePhotoRepository = spacePhotoRepository;
+        this.projectPhotoRepository = projectPhotoRepository;
     }
 
     /**
-     * 1. 사진 파일 저장 : SpaceItemId를 받아서 Photo파일 추가
+     * 1. 사진 파일 저장 메서드 :ProjectItemId를 받아서 Photo파일 추가
      * @param multipartFileList : 사진 파일 리스트
-     * @param id : SpaceItemId
+     * @param id : ProjectItemId
      * @return
      * @throws IOException
      */
-    public ResponseEntity<?> addPhotos(List<MultipartFile> multipartFileList, Long id) throws IOException {
+    public ResponseEntity<?> addPhoto(List<MultipartFile> multipartFileList, Long id) throws IOException {
         // 리스트로 들어온 여러 파일들을 하나씩 S3와 DB에 저장
         for (MultipartFile multipartFile : multipartFileList) {
             // 파일명 지정 (겹치지 않도록 UUID와 원본 파일명을 조합)
@@ -45,54 +45,55 @@ public class SpacePhotoService {
             String s3KeyName = extractKeyNameFromUrl(url);
 
             // SpacePhotoDTO 생성
-            SpacePhotoDTO spacePhotoDTO = SpacePhotoDTO.builder()
-                    .spaceItemId(id)
+            ProjectPhotoDTO projectPhotoDTO = ProjectPhotoDTO.builder()
+                    .projectItemId(id)
                     .fileName(fileName)
                     .url(url)
                     .s3KeyName(s3KeyName)
                     .build();
 
             // SpacePhotoDTO를 엔티티로 변환하여 저장
-            SpacePhoto spacePhoto = spacePhotoDTO.toEntity();
-            spacePhotoRepository.save(spacePhoto);
+            ProjectPhoto projectPhoto = projectPhotoDTO.toEntity();
+            projectPhotoRepository.save(projectPhoto);
         }
         return ResponseEntity.ok().build();
     }
 
     /**
-     * 2. 사진 개별 삭제 메서드 : spacePhotoId에 해당하는 사진 삭제
-     * @param spacePhotoIds : 삭제할 사진의 spacePhotoIds
+     * 2. 사진 개별 삭제 메서드 : ProjectPhotoId에 해당하는 사진 삭제
+     * @param projectPhotoIds : 삭제할 사진의 projectPhotoIds
      */
     @Transactional
-    public void deletePhotosBySpaceId(List<Long> spacePhotoIds) {
-        for (Long spacePhotoId : spacePhotoIds) {
+    public void deletePhotosByProjectId(List<Long> projectPhotoIds) {
+        for (Long projectPhotoId : projectPhotoIds) {
             // DB에서 사진 정보 가져오기
-            SpacePhoto spacePhoto = spacePhotoRepository.findById(spacePhotoId)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid space photo ID: " + spacePhotoId));
+            ProjectPhoto projectPhoto = projectPhotoRepository.findById(projectPhotoId)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid space photo ID: " + projectPhotoId));
 
             // S3 키 추출
-            String keyName = extractKeyNameFromUrl(spacePhoto.getUrl());
+            String keyName = extractKeyNameFromUrl(projectPhoto.getUrl());
 
             // S3에서 파일 삭제
             s3Service.delete(keyName);
 
             // DB에서 사진 삭제
-            spacePhotoRepository.delete(spacePhoto);
+            projectPhotoRepository.delete(projectPhoto);
         }
     }
 
+
     /**
      * 3. 입력한 SpaceItemId에 해당하는 모든 사진 삭제
-     * @param spaceItemId SpaceItem ID
+     * @param projectItemId SpaceItem ID
      * @throws IllegalArgumentException 주어진 SpaceItem ID에 해당하는 사진이 없는 경우 예외 발생
      */
-    public void deleteAllPhotos(Long spaceItemId) {
-        List<SpacePhoto> photos = spacePhotoRepository.findBySpaceItemId(spaceItemId);
+    public void deleteAllPhotos(Long projectItemId) {
+        List<ProjectPhoto> photos = projectPhotoRepository.findByProjectItemId(projectItemId);
         if (photos.isEmpty()) {
-            throw new IllegalArgumentException("No photos found with space item ID: " + spaceItemId);
+            throw new IllegalArgumentException("No photos found with project item ID: " + projectItemId);
         }
 
-        for (SpacePhoto photo : photos) {
+        for (ProjectPhoto photo : photos) {
             // 각 사진의 S3 키 추출
             String keyName = extractKeyNameFromUrl(photo.getUrl());
 
@@ -101,19 +102,19 @@ public class SpacePhotoService {
         }
 
         // DB에서 모든 사진 삭제
-        spacePhotoRepository.deleteAll(photos);
+        projectPhotoRepository.deleteAll(photos);
     }
 
 
     /**
      * 4. DB에서 입력한 SpaceItemId에 해당하는 keyname을 이용하여 S3 사진을 검색하는 메서드
-     * @param spaceItemId : 검색할 사진이 저장된 DB의 SpaceItemId
+     * @param projectPhotoId : 검색할 사진이 저장된 DB의 SpacePhotoId
      * @return : Optional을 통해 검색된 사진을 반환
      */
-    public List<SpacePhotoDTO> getPhotosBySpaceItemId(Long spaceItemId) {
-        List<SpacePhoto> spacePhotos = spacePhotoRepository.findBySpaceItemId(spaceItemId);
-        return spacePhotos.stream()
-                .map(SpacePhotoDTO::fromEntity)
+    public List<ProjectPhotoDTO> getPhotosByProjectItemId(Long projectPhotoId) {
+        List<ProjectPhoto> projectPhotos = projectPhotoRepository.findByProjectItemId(projectPhotoId);
+        return projectPhotos.stream()
+                .map(ProjectPhotoDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 

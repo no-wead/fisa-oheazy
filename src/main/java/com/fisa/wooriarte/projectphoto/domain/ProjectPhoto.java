@@ -1,4 +1,4 @@
-package com.fisa.wooriarte.spacephoto.domain;
+package com.fisa.wooriarte.projectphoto.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,16 +16,16 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class SpacePhoto {
+public class ProjectPhoto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long spacePhotoId;
+    private Long projectPhotoId;
 
     @Column
-    private Long spaceItemId;
+    private Long projectItemId;
 //    @JoinColumn
-//    private SpaceItem spaceItem;
+//    private ProjectItem projectItem;
 
     // S3 키 값
     @Column(nullable = false)

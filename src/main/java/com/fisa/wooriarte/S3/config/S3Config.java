@@ -1,4 +1,4 @@
-package com.fisa.wooriarte.spacephoto.config;
+package com.fisa.wooriarte.S3.config;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;

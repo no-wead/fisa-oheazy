@@ -1,12 +1,8 @@
 package com.fisa.wooriarte.spacephoto.controller;
 
-import com.fisa.wooriarte.spacephoto.domain.SpacePhoto;
 import com.fisa.wooriarte.spacephoto.dto.SpacePhotoDTO;
 import com.fisa.wooriarte.spacephoto.service.SpacePhotoService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class SpacePhotoController {
@@ -34,13 +29,13 @@ public class SpacePhotoController {
      * @return
      * @throws IOException
      */
-    @PostMapping(path = "/{space-item-id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> addFiles(@PathVariable("space-item-id") Long spaceItemId, @RequestPart(value = "file", required = false) List<MultipartFile> multipartFileList) throws IOException {
+    @PostMapping(path = "/{space-item-id}/add-space-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> addPhotos(@PathVariable("space-item-id") Long spaceItemId, @RequestPart(value = "file", required = false) List<MultipartFile> multipartFileList) throws IOException {
         System.out.println(spaceItemId);
         if (multipartFileList == null) {
             return ResponseEntity.badRequest().body("No files provided");
         } else {
-            return spacePhotoService.addFiles(multipartFileList, spaceItemId);
+            return spacePhotoService.addPhotos(multipartFileList, spaceItemId);
         }
     }
 
@@ -49,10 +44,10 @@ public class SpacePhotoController {
      * @param photoIds
      * @return
      */
-    @DeleteMapping("/delete")
+    @DeleteMapping("/delete-space-photo")
     public ResponseEntity<String> deletePhotos(@RequestParam List<Long> photoIds) {
         try {
-            spacePhotoService.deleteFiles(photoIds);
+            spacePhotoService.deletePhotosBySpaceId(photoIds);
             return ResponseEntity.ok("Photos deleted successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -64,10 +59,10 @@ public class SpacePhotoController {
      * @param spaceItemId
      * @return
      */
-    @DeleteMapping("/{space-item-id}/delete-all")
+    @DeleteMapping("/{space-item-id}/delete-all-space-photo")
     public ResponseEntity<String> deleteAllPhotos(@PathVariable("space-item-id") Long spaceItemId) {
         try {
-            spacePhotoService.deleteAllFiles(spaceItemId);
+            spacePhotoService.deleteAllPhotos(spaceItemId);
             return ResponseEntity.ok("All photos with space item ID " + spaceItemId + " deleted successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -79,7 +74,7 @@ public class SpacePhotoController {
      * @param spaceItemId
      * @return photos 객체 정보 출력
      */
-    @GetMapping("/{space-item-id}/photos")
+    @GetMapping("/{space-item-id}/space-photos")
     public ResponseEntity<List<SpacePhotoDTO>> getPhotosBySpaceItemId(@PathVariable("space-item-id") Long spaceItemId) {
         List<SpacePhotoDTO> photos = spacePhotoService.getPhotosBySpaceItemId(spaceItemId);
         return new ResponseEntity<>(photos, HttpStatus.OK);
